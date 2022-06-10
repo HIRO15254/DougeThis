@@ -1,73 +1,97 @@
+// 使いやすさの観点から、全体の半分(入るのにor出るのに)
+final int TITLE_ANIMATION_DURATION = 80;
+final int TITLE_ANIMATION_BRANK = 20;
+final int TITLE_X_SIZE = 200;
+final int STAGE_NAME_Y = 360;
+final int STAGE_TITLE_Y = 420;
+final int STAGE_BONUS_Y = 460;
+final int STAGE_PROGRESS_X = 500;
+final int STAGE_PROGRESS_Y = 820;
+
+// ステージの共通処理を記述した基底クラス
 public class Stage {
-    protected int time = -180;
-    protected boolean bonus;
-    protected Easing ease;
-    protected float oldBonusEase;
-    protected Easing bonusEase;
     protected int stageLength;
     protected String stageName;
     protected String stageTitle;
 
+    protected int time;
+    private boolean bonus;
+    private Easing titleEase;
+
+    private float bonusAmount;
+    private Easing bonusEase;
+    private float oldBonusEaseValue;
+
+    // インスタンスの作成
     Stage() {
-        time = -180;
-        ease = new Easing(EASE_OUT_EXPO, -200, 520, 80);
+        time = -(TITLE_ANIMATION_DURATION * 2 + TITLE_ANIMATION_BRANK);
+        titleEase = new Easing(EASE_OUT_EXPO, -TITLE_X_SIZE, (int)(width / 2) + TITLE_X_SIZE, TITLE_ANIMATION_DURATION);
         bonus = true;
+        bonusAmount = 40 - level * 5;
     }
 
+    // ボーナスの喪失
     void loseBonus() {
         bonus = false;
     }
 
-    boolean update() {
+    // 各フレームの数値更新処理
+    void update() {
         time++;
         if (time < 0) {
-            ease.update();
-            if (time == -100) {
-                ease = new Easing(EASE_IN_CUBIC, 320, 520, 80);
+            titleEase.update();
+            if (time == -(TITLE_ANIMATION_DURATION + TITLE_ANIMATION_BRANK)) { 
+                titleEase = new Easing(EASE_IN_CUBIC, (int)(width / 2), (int)(width / 2) + TITLE_X_SIZE, TITLE_ANIMATION_DURATION); 
             }
         }
         if (time >= stageLength) {
             if (time == stageLength) {
                 enemyManager.reset();
-                ease = new Easing(EASE_OUT_EXPO, -200, 520, 80);
-                if (bonus) { bonusEase = new Easing(EASE_OUT_CUBIC, 0, 0.40 - level * 0.05, 80); }
-            } if (time == stageLength + 80) {
-                ease = new Easing(EASE_IN_EXPO, 320, 520, 80);
+                titleEase = new Easing(EASE_OUT_EXPO, -TITLE_X_SIZE, (int)(width / 2) + TITLE_X_SIZE, TITLE_ANIMATION_DURATION);
+                if (bonus) { bonusEase = new Easing(EASE_OUT_CUBIC, 0, bonusAmount / 100, TITLE_ANIMATION_DURATION); }
+            } 
+            if (time == stageLength + TITLE_ANIMATION_DURATION) {
+                titleEase = new Easing(EASE_IN_EXPO, (int)(width / 2), (int)(width / 2) + TITLE_X_SIZE, TITLE_ANIMATION_DURATION);
             }
-            ease.update();
+            titleEase.update();
             if (bonus) {
-                oldBonusEase = bonusEase.get();
+                oldBonusEaseValue = bonusEase.get();
                 bonusEase.update();
-                player.bomb += bonusEase.get() - oldBonusEase;
+                player.bomb += bonusEase.get() - oldBonusEaseValue;
             }
         }
-        return time >= 0 && time <= stageLength;
+        // TODO: グローバル変数の変更はあまりよくない
+        playerMove = time >= 0 && time <= stageLength;
     }
 
+    // 各フレームのステージ情報描画処理
     void draw() {
+        // 最初のタイトル表示
         if (time < 0) {
             textFont(small, 30);
             fill(0);
-            text(stageName, ease.get(), 360);
+            text(stageName, titleEase.get(), STAGE_NAME_Y);
             textFont(main, 48);
-            text(stageTitle, 640 - ease.get(), 420);
-            playerMove = false;
-        } else if (time < stageLength) {
+            text(stageTitle, width - titleEase.get(), STAGE_TITLE_Y);
+        }
+        // ステージ中のステージ進捗表示
+        else if (time < stageLength) {
+            String progress = str((float)(time * 1000 / stageLength) / 10);
             fill(0);
             textFont(small, 30);
-            text("progress: " + str((float)(time * 1000 / stageLength) / 10) + "%", 500, 820);
-            playerMove = true;
-        } else {
-            textFont(small, 30);
+            text("progress: " + progress + "%", STAGE_PROGRESS_X, STAGE_PROGRESS_Y);
+        }
+        // ステージ終了時の表示
+        else {
             fill(0);
-            text(stageName, ease.get(), 360);
+            textFont(small, 30);
+            text(stageName, titleEase.get(), STAGE_NAME_Y);
             textFont(main, 48);
-            text("Clear", 640 - ease.get(), 420);
+            text("Clear", width - titleEase.get(), STAGE_TITLE_Y);
             if (bonus) {
                 textFont(small, 30);
-                text("Bonus bomb+" + str(40 - level * 5) + "%", 640 - ease.get(), 460);
+                text("Bonus bomb+" + str(bonusAmount) + "%", width - titleEase.get(), STAGE_BONUS_Y);
             }
-            playerMove = false;
         }
     }
 }
@@ -79,8 +103,8 @@ public class Stage1_1 extends Stage {
         stageTitle = "Firefrower";
     }
 
-    boolean update() {
-        boolean ret = super.update();
+    void update() {
+        super.update();
         switch (time) {
             case 1:
                 enemyManager.add(new Enemy1(width / 2, -50, 180, 100, false, #6bbed5));
@@ -193,10 +217,10 @@ public class Stage1_1 extends Stage {
             default:
                 break;
         }
-        if (time >= stageLength + 180) {
+        if (time == stageLength + TITLE_ANIMATION_DURATION * 2 + TITLE_ANIMATION_BRANK) {
             nowStage = new Stage1_2();
+            println("asdasdasda");
         }
-        return ret;
     }
 }
 
@@ -209,8 +233,8 @@ public class Stage1_2 extends Stage {
         stageTitle = "Sniper";
     }
 
-    boolean update() {
-        boolean ret = super.update();
+    void update() {
+        super.update();
         if (time == 0) { phase = 0; }
         if (0 <= time && time <= stageLength) {
             phaseCount++;
@@ -269,6 +293,5 @@ public class Stage1_2 extends Stage {
                 }
                 break;
         }
-        return ret;
     }
 }

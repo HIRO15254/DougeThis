@@ -2,9 +2,7 @@ PFont title, main, small;
 String scene = "title";
 int level = 0;
 
-final String[] LEVELS = {"basic", "advanced", "expart", "master", "lunatic"};
-final color[] LEVEL_COLORS = {#5ec84e, #f3c759, #da6272, #9d73bb, #717171};
-
+// 起動時処理
 void setup() {
     size(640, 960);
     textAlign(CENTER, CENTER);
@@ -15,6 +13,7 @@ void setup() {
     small = loadFont("mgenplus-1mn-thin-30.vlw");
 }
 
+// 各フレームの描画処理
 void draw() {
     background(255);
     switch (scene) {

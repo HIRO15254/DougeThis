@@ -1,3 +1,4 @@
+// ポーズ画面を描画する
 public void Pause() {
     fill(0);
     textFont(title, 96);

@@ -1,3 +1,6 @@
+// Processingは仕様上長押しや複数キーの同時押しを認識しないので、
+// キーを渡すとキーの押下状態を連続押下フレームで返すラッパークラス
+
 public static class KeyState {
     private static int[] states = new int[256]; 
 

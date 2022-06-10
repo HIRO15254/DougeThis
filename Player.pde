@@ -1,11 +1,19 @@
 final int PLAYER_SIZE = 30;
 final int PLAYER_SPEED = 8;
+final float PLAYER_ROLL_SPEED = 0.01;
 final int PLAYER_HITBOX_SIZE = 4;
 final int PLAYER_DATA_HEIGHT = 120;
-final int PLAYER_BOMB_SPEED = 9;
-final int PLAYER_BOMB_LENGTH = 100;
+final int PLAYER_BOMB_SPEED = 15;
+final int PLAYER_BOMB_DURATION = 60;
+final int PLAYER_BOMB_INVINCIBLE_DURATION = 120;
+final int PLAYER_MISS_ANIMATION_DURATION = 60;
+final int PLAYER_MISS_ANIMATION_SPEED = 7;
+final float PLAYER_MISS_ANIMATION_GRAVITY = 0.5;
+final int PLAYER_REBORN_ANIMATION_DURATION = 60;
+final int PLAYER_REBORN_INVINCIBLE_DURATION = 60;
 final float[] PLAYER_BOMB_PER_FRAME = {0.0007, 0.0005, 0.0004, 0.0003, 0.0002};
 
+// プレイヤーの動きを管理するクラス
 public class Player {
     float x, y, roll;
     float bomb = 2;
@@ -13,7 +21,7 @@ public class Player {
     float bombTime = -1;
     float bombX = 0;
     float bombY = 0;
-    float inv = 0;
+    float invincible = 0;
     float missAnimation = -1;
     Easing missAnimationEaseX;
     Easing missAnimationEaseY;
@@ -24,8 +32,10 @@ public class Player {
         roll = 0;
     }
 
+    // 各フレームの数値の更新を行うクラス
     void update(Stage nowStage) {
         enemyMove = true;
+        // TODO: グローバル変数の変更はよくない
         float moveX = 0;
         float moveY = 0;
         float speed = PLAYER_SPEED;
@@ -40,43 +50,51 @@ public class Player {
                 x = max(0, min(width, x + moveX * speed));
                 y = max(0, min(height - PLAYER_DATA_HEIGHT, y + moveY * speed));
             }
+            // 前にいるほどボムが早くたまる
             bomb += PLAYER_BOMB_PER_FRAME[level] * (max(min((float)(800 - y) / 800, 1), 0) + 1);
         }
-        roll += 0.01 * speed;
-        inv = max(0, inv - 1);
-        if ((KeyState.get((int)'x') == 1 || KeyState.get((int)'X') == 1) && bomb >= 1 && inv < 100) {
-            bomb -= bomb % 1 + 1;
+        roll += PLAYER_ROLL_SPEED * speed;
+        invincible = max(0, invincible - 1);
+        // ボム
+        if ((KeyState.get((int)'x') == 1 || KeyState.get((int)'X') == 1) && bomb >= 1 && invincible == 0) {
+            bomb = floor(bomb - 1);
             bombX = x;
             bombY = y;
             bombTime = 0;
-            inv = PLAYER_BOMB_LENGTH;
+            invincible = PLAYER_BOMB_DURATION;
+            // TODO: グローバル変数の変更はよくない
             nowStage.loseBonus();
         }
-        if (inv == 0 && enemyManager.hit(x, y)) {
+        // 被弾
+        if (invincible == 0 && enemyManager.hit(x, y)) {
             life--;
             bomb = 2;
             bombX = x;
             bombY = y;
             bombTime = 0;
             missAnimation = 0;
-            inv = 120;
+            invincible = PLAYER_MISS_ANIMATION_DURATION + PLAYER_REBORN_ANIMATION_DURATION + PLAYER_REBORN_INVINCIBLE_DURATION;
             nowStage.loseBonus();
         }
+        // ボム中
         if (bombTime != -1) {
             bombTime += 1;
-            if (bombTime == PLAYER_BOMB_LENGTH) { bombTime = -1; }
+            if (bombTime == PLAYER_BOMB_DURATION) { bombTime = -1; }
             enemyManager.bomb(bombX, bombY, bombTime * PLAYER_BOMB_SPEED);
         }
+        // ミス演出中
         if (missAnimation != -1) {
             missAnimation += 1;
-            if (missAnimation == 60) { missAnimation = -1; }
+            if (missAnimation == PLAYER_MISS_ANIMATION_DURATION + PLAYER_REBORN_ANIMATION_DURATION) { missAnimation = -1; }
             enemyMove = false;
         }
     }
 
+    // 各フレームの自機関係描画処理
     void draw() {
+        // ミス演出中でないときの自機描画
         if (missAnimation == -1) {
-            if (inv == 0 || (int)(inv / 10) % 2 != 0) {
+            if (invincible == 0 || (int)(invincible / 10) % 2 != 0) {
                 pushMatrix();
                     translate(x, y);
                     fill(#BBBBBB);
@@ -88,34 +106,31 @@ public class Player {
                     }
                 popMatrix();
             }
-        } else {
-            if (missAnimation < 30) {
+        }
+        // ミス演出中の自機描画 
+        else {
+            // 砕ける段階
+            if (missAnimation <= PLAYER_MISS_ANIMATION_DURATION) {
+                int[] particle_speed_x = {1, 1, -1, -1};
+                int[] particle_speed_y = {1, -1, 1, -1};
                 fill(#BBBBBB);
-                pushMatrix();
-                    translate(x - missAnimation * 15, y - missAnimation * 15 + missAnimation * missAnimation);
-                    rotate(roll);
-                    rect(-PLAYER_SIZE / 4, -PLAYER_SIZE / 4, PLAYER_SIZE / 2, PLAYER_SIZE / 2);
-                popMatrix();
-                pushMatrix();
-                    translate(x + missAnimation * 15, y - missAnimation * 15 + missAnimation * missAnimation);
-                    rotate(roll);
-                    rect(-PLAYER_SIZE / 4, -PLAYER_SIZE / 4, PLAYER_SIZE / 2, PLAYER_SIZE / 2);
-                popMatrix();
-                pushMatrix();
-                    translate(x + missAnimation * 15, y + missAnimation * 15 + missAnimation * missAnimation);
-                    rotate(roll);
-                    rect(-PLAYER_SIZE / 4, -PLAYER_SIZE / 4, PLAYER_SIZE / 2, PLAYER_SIZE / 2);
-                popMatrix();
-                pushMatrix();
-                    translate(x - missAnimation * 15, y + missAnimation * 15 + missAnimation * missAnimation);
-                    rotate(roll);
-                    rect(-PLAYER_SIZE / 4, -PLAYER_SIZE / 4, PLAYER_SIZE / 2, PLAYER_SIZE / 2);
-                popMatrix();
-            } else {
-                if (missAnimation == 30) {
-                    missAnimationEaseX = new Easing(EASE_OUT_CUBIC, width / 2, x - width / 2, 30);
-                    missAnimationEaseY = new Easing(EASE_OUT_CUBIC, height, y - height, 30);
+                for (int i = 0; i < 4; i++) {
+                    pushMatrix();
+                        translate(
+                            x + (missAnimation * PLAYER_MISS_ANIMATION_SPEED) * particle_speed_x[i],
+                            y + (missAnimation * PLAYER_MISS_ANIMATION_SPEED) * particle_speed_y[i] + missAnimation * missAnimation * PLAYER_MISS_ANIMATION_GRAVITY
+                        );
+                        rotate(roll);
+                        rect(-PLAYER_SIZE / 4, -PLAYER_SIZE / 4, PLAYER_SIZE / 2, PLAYER_SIZE / 2);
+                    popMatrix();
                 }
+                if (missAnimation == PLAYER_MISS_ANIMATION_DURATION) {
+                    missAnimationEaseX = new Easing(EASE_OUT_CUBIC, width / 2, x - width / 2, PLAYER_REBORN_ANIMATION_DURATION);
+                    missAnimationEaseY = new Easing(EASE_OUT_CUBIC, height, y - height, PLAYER_REBORN_ANIMATION_DURATION);
+                }
+            }
+            // 元の位置まで戻る段階
+            else {
                 missAnimationEaseX.update();
                 missAnimationEaseY.update();
                 pushMatrix();
@@ -126,6 +141,7 @@ public class Player {
                 popMatrix();
             }
         }
+        // ボムか被弾に関わる弾消しの演出
         if (bombTime != -1) {
             stroke(#999999);
             noFill();
@@ -134,6 +150,7 @@ public class Player {
         }
     }
 
+    // 各フレームの画面下部情報の描画
     void drawData() {
         fill(#f6d4d8);
         rect(0, height - PLAYER_DATA_HEIGHT, width, PLAYER_DATA_HEIGHT);

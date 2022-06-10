@@ -1,20 +1,19 @@
 public Player player;
 public EnemyManager enemyManager;
 public Stage nowStage;
-int stage = 1;
-int phaze = 1;
-int time = 0;
 boolean playerMove;
 boolean enemyMove;
 
+// プレイに関する変数を初期化する
 void InitializePlay() {
     player = new Player(320, 580);
     enemyManager = new EnemyManager();
-    nowStage = new Stage1_2();
+    nowStage = new Stage1_1();
     playerMove = true;
     enemyMove = true;
 }
 
+// プレイ画面を描画する
 public void Play() {
     if (playerMove) { player.update(nowStage); }
     if (enemyMove) {
@@ -25,7 +24,6 @@ public void Play() {
     enemyManager.draw();
     player.drawData();
     nowStage.draw();
-    time++;
     if (KeyState.get(CONTROL) == 1) {
         scene = "pause";
     }

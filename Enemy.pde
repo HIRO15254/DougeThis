@@ -1,3 +1,6 @@
+// 敵の管理をするクラス
+// 敵を生成するときに1つだけ作ったこのクラスのインスタンスに登録する
+// 敵すべてに関する処理などをまとめて行う他、画面外に出た弾を消したりする
 class EnemyManager {
   private ArrayList<Enemy> enemies;
 
@@ -50,6 +53,8 @@ class EnemyManager {
   }
 }
 
+// 敵を表す抽象クラス
+// 前述の敵管理クラスに登録するにはこれを継承する必要がある
 abstract public class Enemy {
     abstract public boolean update(float playerX, float playerY);
     abstract public void draw();

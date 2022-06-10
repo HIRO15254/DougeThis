@@ -1,3 +1,7 @@
+// 動きにメリハリをつけるためのイージングを定義したファイル
+// 定数として設定したイージングの種類と初期値、変化量を渡して作ったインスタンスを用いることで、
+// 各フレームの更新の有無などを簡単に管理できる
+
 public final int EASE_IN_SINE     = 0;
 public final int EASE_OUT_SINE    = 1;
 public final int EASE_INOUT_SINE  = 2;

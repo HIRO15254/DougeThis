@@ -1,3 +1,7 @@
+final String[] LEVELS = {"basic", "advanced", "expart", "master", "lunatic"};
+final color[] LEVEL_COLORS = {#5ec84e, #f3c759, #da6272, #9d73bb, #717171};
+
+// タイトルの表示を行う
 public void Title() {
     fill(0);
     textFont(title, 96);
