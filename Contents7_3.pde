@@ -26,6 +26,9 @@ void draw() {
         case "pause":
             Pause();
             break;
+        case "gameover":
+            GameOver();
+            break;
     }
     KeyState.update();
 }

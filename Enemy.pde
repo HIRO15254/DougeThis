@@ -62,6 +62,7 @@ abstract public class Enemy {
     abstract public boolean collision(float colX, float colY);
 }
 
+// 加減速しない普通の敵弾
 class NormalBullet extends Enemy {
   private float x, y;
   private float size;

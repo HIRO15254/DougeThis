@@ -23,6 +23,7 @@ public class Player {
     float bombY = 0;
     float invincible = 0;
     float missAnimation = -1;
+    int continueCount = 0;
     Easing missAnimationEaseX;
     Easing missAnimationEaseY;
 
@@ -56,7 +57,7 @@ public class Player {
         roll += PLAYER_ROLL_SPEED * speed;
         invincible = max(0, invincible - 1);
         // ボム
-        if ((KeyState.get((int)'x') == 1 || KeyState.get((int)'X') == 1) && bomb >= 1 && invincible == 0) {
+        if ((KeyState.get((int)'z') == 1 || KeyState.get((int)'Z') == 1) && bomb >= 1 && invincible == 0) {
             bomb = floor(bomb - 1);
             bombX = x;
             bombY = y;
@@ -125,6 +126,7 @@ public class Player {
                     popMatrix();
                 }
                 if (missAnimation == PLAYER_MISS_ANIMATION_DURATION) {
+                    if (life == -1) { scene = "gameover"; }
                     missAnimationEaseX = new Easing(EASE_OUT_CUBIC, width / 2, x - width / 2, PLAYER_REBORN_ANIMATION_DURATION);
                     missAnimationEaseY = new Easing(EASE_OUT_CUBIC, height, y - height, PLAYER_REBORN_ANIMATION_DURATION);
                 }
@@ -177,5 +179,11 @@ public class Player {
         rect(40, height - 30, width - 100, 20);
         fill(#BBBBBB);
         rect(40, height - 30, (width - 100) * (bomb % 1), 20);
+    }
+
+    void doContinue() {
+        life = 2;
+        bomb = 2;
+        continueCount++;
     }
 }

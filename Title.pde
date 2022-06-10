@@ -32,7 +32,7 @@ public void Title() {
         }
     }
 
-    if (KeyState.get(ENTER) == 1) {
+    if (KeyState.get((int)'z') == 1 || KeyState.get((int)'Z') == 1) {
         scene = "play";
         InitializePlay();
     }
